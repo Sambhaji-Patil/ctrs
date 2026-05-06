@@ -1,0 +1,34 @@
+name: Deploy to HF Space
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${HF_TOKEN:-}" ] || [ -z "${HF_SPACE:-}" ]; then
+            echo "Missing HF_TOKEN or HF_SPACE secrets."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git remote add hf "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}.git"
+          git push --force hf HEAD:main
